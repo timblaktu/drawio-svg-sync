@@ -77,6 +77,41 @@ drawio-svg-sync -h
 
 This tool uses `drawio-headless` to export the SVG from the embedded XML, regenerating the visible SVG body.
 
+## Testing
+
+### Run CLI tests (sandboxed)
+
+```bash
+nix flake check
+```
+
+This runs the `integration` check which tests CLI behavior, argument parsing, and error handling.
+
+### Run full rendering tests (requires display)
+
+```bash
+# Enter dev shell with all dependencies
+nix develop
+
+# Run the test suite
+./tests/run-tests.sh
+```
+
+The full test suite renders actual `.drawio.svg` files and requires a display (X11/Wayland) since drawio-headless uses Electron.
+
+### Test fixtures
+
+The `tests/fixtures/` directory contains various test cases:
+
+- `simple-rect.drawio.svg` - Basic rectangle shape
+- `with-text.drawio.svg` - Shape with text label
+- `two-boxes-arrow.drawio.svg` - Two shapes with connector arrow
+- `special-chars.drawio.svg` - UTF-8 characters (Héllo Wörld 日本語)
+- `empty-diagram.drawio.svg` - Minimal empty diagram
+- `nested/deep/nested-box.drawio.svg` - Nested directory structure (tests `-a` flag)
+- `invalid-corrupt.drawio.svg` - Invalid content (tests error handling)
+- `not-drawio.svg` - Regular SVG without draw.io content (tests extension filtering)
+
 ## License
 
 MIT - see [LICENSE](LICENSE)

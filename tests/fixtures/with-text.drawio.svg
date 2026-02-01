@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="122px" height="62px" viewBox="-0.5 -0.5 122 62" content="&lt;mxfile host=&quot;test&quot;&gt;&lt;diagram name=&quot;Page-1&quot; id=&quot;texttest&quot;&gt;dZHBDoIwDIafhvuguYh4VVy8eNIrhzErsCRsjND68TIYKga99d//tfuCIiyqemtlJR6QQBVIwiJC9kHAoyjizNmu1AYzrSyzBGO5KICG9Whdg7JqOC2C+ZlYxq11C3XGOqvB2Py+MJIRdCCwbRxxl1L+xPNdGF0xOFgFBgs54NYrN9iQbnks+K6fYZE02EG27kjh83glClU8OFl3bD9unTgFkb/vUw/i/sli63+3xzc=&lt;/diagram&gt;&lt;/mxfile&gt;">
+  <defs/>
+  <g>
+    <rect x="0" y="0" width="120" height="60" fill="#dae8fc" stroke="#6c8ebf" pointer-events="all"/>
+    <g transform="translate(-0.5 -0.5)">
+      <text x="60" y="37" fill="#000000" font-family="Helvetica" font-size="14px" text-anchor="middle">Hello World</text>
+    </g>
+  </g>
+</svg>
