@@ -12,7 +12,7 @@
 
       pkgsFor = system: import nixpkgs {
         inherit system;
-        config.allowUnfree = true; # drawio-headless has unfree license
+        config.allowUnfree = true; # drawio has unfree license
       };
     in
     {
@@ -36,11 +36,18 @@
           default = pkgs.mkShell {
             buildInputs = [
               self.packages.${system}.default
-              pkgs.drawio-headless
+              pkgs.drawio
+              pkgs.xvfb-run
+              pkgs.xorg.xdpyinfo
             ];
             shellHook = ''
               echo "drawio-svg-sync development shell"
               echo "Commands: drawio-svg-sync, drawio"
+              if [[ -n "''${DISPLAY:-}" ]] && xdpyinfo &>/dev/null; then
+                echo "Display detected: $DISPLAY (using native X11)"
+              else
+                echo "No display detected (will use xvfb-run)"
+              fi
             '';
           };
         }

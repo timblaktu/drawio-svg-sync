@@ -1,9 +1,10 @@
 # Plan: DrawIO-SVG-Sync WSL2 Compatibility
 
 **Created**: 2026-02-02
-**Status**: IN_PROGRESS
+**Updated**: 2026-02-02
+**Status**: BLOCKED - deeper drawio issue discovered
 **Priority**: 1 (CRITICAL - blocks primary development environment)
-**Branch**: `wsl2-fix` (to be created)
+**Branch**: `wsl2-fix`
 
 ---
 
@@ -68,27 +69,56 @@ GPU/Vulkan warnings are cosmetic and can be suppressed.
 
 ---
 
+## BLOCKER: DrawIO Export Fails in WSL2 (2026-02-02)
+
+**Discovery**: The display detection fix was implemented, but testing revealed drawio export itself fails in WSL2 - even with `drawio-headless` (the original working solution).
+
+**Evidence**:
+```bash
+# Original drawio-headless also fails:
+$ nix run 'nixpkgs#drawio-headless' -- -x -f svg -o out.svg input.drawio.svg
+# Exit code 1, no output
+
+# Direct drawio with native X11 fails with GPU errors:
+$ DISPLAY=:0 drawio -x -f svg -o out.svg input.drawio.svg
+# [ERROR:viz_main_impl.cc:189] Exiting GPU process due to errors during initialization
+# Error: Export failed: input.drawio.svg
+```
+
+**Root Cause Hypothesis**: The DrawIO Electron app's GPU process is failing to initialize in WSL2 due to Vulkan/DirectX driver issues (MESA dzn driver). This is a different issue than the Xvfb socket problem the original plan addressed.
+
+**Possible Solutions**:
+1. **Investigate `--disable-gpu` flag**: Electron apps often have this option, but it may not be exposed through drawio's CLI
+2. **Use drawio AppImage**: May have different electron configuration
+3. **Try older drawio version**: GPU requirements may have changed
+4. **WSL2 GPU drivers**: Ensure latest Windows GPU drivers installed
+5. **Wait for upstream fix**: This may be a known drawio/WSL2 issue
+
+**Current State**: Implementation complete, but untestable until drawio export works.
+
+---
+
 ## Progress Tracking
 
 | Task | Status | Definition of Done |
 |------|--------|-------------------|
 | **0. Setup** | | |
-| 0.1 Create branch | `TASK:PENDING` | `wsl2-fix` branch created from main |
+| 0.1 Create branch | `TASK:COMPLETE` | `wsl2-fix` branch created from main |
 | **1. Implementation** | | |
-| 1.1 Update dependencies | `TASK:PENDING` | Replace `drawio-headless` with `drawio` + `xorg.xdpyinfo` |
-| 1.2 Add display detection | `TASK:PENDING` | Function to test if DISPLAY works |
-| 1.3 Implement dual-path rendering | `TASK:PENDING` | Direct drawio when display works, xvfb fallback otherwise |
-| 1.4 Add verbose mode | `TASK:PENDING` | `-v/--verbose` flag for debugging |
-| 1.5 Suppress GPU warnings | `TASK:PENDING` | Clean stderr output in normal mode |
+| 1.1 Update dependencies | `TASK:COMPLETE` | Replace `drawio-headless` with `drawio` + `xorg.xdpyinfo` |
+| 1.2 Add display detection | `TASK:COMPLETE` | Function to test if DISPLAY works |
+| 1.3 Implement dual-path rendering | `TASK:COMPLETE` | Direct drawio when display works, xvfb fallback otherwise |
+| 1.4 Add verbose mode | `TASK:COMPLETE` | `-v/--verbose` flag for debugging |
+| 1.5 Suppress GPU warnings | `TASK:COMPLETE` | Clean stderr output in normal mode |
 | **2. Testing** | | |
-| 2.1 Test in WSL2 | `TASK:PENDING` | Renders successfully with `DISPLAY=:0` |
-| 2.2 Test fallback | `TASK:PENDING` | Works with `DISPLAY=` (empty, forces xvfb) |
+| 2.1 Test in WSL2 | `TASK:BLOCKED` | **BLOCKED**: drawio export fails regardless of display |
+| 2.2 Test fallback | `TASK:BLOCKED` | **BLOCKED**: drawio export fails with xvfb too |
 | 2.3 Update test suite | `TASK:PENDING` | Tests pass in sandboxed build |
 | **3. Documentation** | | |
 | 3.1 Update README | `TASK:PENDING` | Document WSL2 behavior and verbose flag |
 | 3.2 Add troubleshooting | `TASK:PENDING` | Common issues and solutions |
 | **4. Integration** | | |
-| 4.1 Test with diagram skill | `TASK:PENDING` | End-to-end skill workflow works |
+| 4.1 Test with diagram skill | `TASK:BLOCKED` | End-to-end skill workflow works |
 | 4.2 Update nixcfg if needed | `TASK:PENDING` | Any flake/overlay changes |
 
 ---

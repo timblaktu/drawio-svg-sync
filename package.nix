@@ -1,6 +1,8 @@
 { lib
 , writeShellApplication
-, drawio-headless
+, drawio              # Direct drawio binary, not drawio-headless
+, xvfb-run           # Fallback for headless environments
+, xorg               # For xdpyinfo to test display availability
 , fd
 , coreutils
 }:
@@ -8,7 +10,7 @@
 writeShellApplication {
   name = "drawio-svg-sync";
 
-  runtimeInputs = [ drawio-headless fd coreutils ];
+  runtimeInputs = [ drawio xvfb-run xorg.xdpyinfo fd coreutils ];
 
   text = ''
     # Colors for output
@@ -16,6 +18,9 @@ writeShellApplication {
     GREEN='\033[0;32m'
     YELLOW='\033[0;33m'
     NC='\033[0m' # No Color
+
+    # Verbose mode (off by default)
+    VERBOSE=false
 
     usage() {
       echo "Usage: drawio-svg-sync [OPTIONS] [FILE...]"
@@ -25,12 +30,19 @@ writeShellApplication {
       echo "OPTIONS:"
       echo "  -a, --all      Find and render all .drawio.svg files recursively"
       echo "  -d, --dry-run  Show what would be rendered without executing"
+      echo "  -v, --verbose  Show detailed output including display detection"
       echo "  -h, --help     Show this help message"
       echo ""
       echo "EXAMPLES:"
       echo "  drawio-svg-sync docs/diagram.drawio.svg     # Render single file"
       echo "  drawio-svg-sync -a                          # Render all .drawio.svg files"
       echo "  drawio-svg-sync -d -a                       # Dry run for all files"
+      echo "  drawio-svg-sync -v -a                       # Verbose mode for debugging"
+    }
+
+    # Check if we have a working X display (e.g., WSLg provides DISPLAY=:0)
+    has_working_display() {
+      [[ -n "''${DISPLAY:-}" ]] && xdpyinfo -display "$DISPLAY" &>/dev/null
     }
 
     render_file() {
@@ -56,14 +68,39 @@ writeShellApplication {
 
       # Export to temporary file, then move back
       # drawio -x exports based on embedded XML, regenerating SVG body
-      local tmpfile
+      local tmpfile tmpconfig
       tmpfile=$(mktemp --suffix=.svg)
-      # shellcheck disable=SC2064
-      trap "rm -f $tmpfile" RETURN
+      tmpconfig=$(mktemp -d)
 
-      if drawio -x -f svg -o "$tmpfile" "$file" 2>/dev/null; then
+      # Cleanup on function return
+      cleanup() { rm -f "$tmpfile"; rm -rf "$tmpconfig"; }
+      trap cleanup RETURN
+
+      local result=0
+
+      if has_working_display; then
+        # Use existing display (WSLg, native X11, etc.)
+        [[ "$VERBOSE" == "true" ]] && echo -e "\n  ''${YELLOW}Using display: $DISPLAY''${NC}"
+        if [[ "$VERBOSE" == "true" ]]; then
+          XDG_CONFIG_HOME="$tmpconfig" drawio -x -f svg -o "$tmpfile" "$file" || result=$?
+        else
+          # Suppress GPU/Vulkan warnings in normal mode
+          XDG_CONFIG_HOME="$tmpconfig" drawio -x -f svg -o "$tmpfile" "$file" 2>/dev/null || result=$?
+        fi
+      else
+        # No display available, use xvfb-run
+        [[ "$VERBOSE" == "true" ]] && echo -e "\n  ''${YELLOW}No display, using xvfb-run''${NC}"
+        if [[ "$VERBOSE" == "true" ]]; then
+          XDG_CONFIG_HOME="$tmpconfig" xvfb-run --auto-servernum drawio -x -f svg -o "$tmpfile" "$file" || result=$?
+        else
+          XDG_CONFIG_HOME="$tmpconfig" xvfb-run --auto-servernum drawio -x -f svg -o "$tmpfile" "$file" 2>/dev/null || result=$?
+        fi
+      fi
+
+      if [[ $result -eq 0 && -s "$tmpfile" ]]; then
         mv "$tmpfile" "$file"
         echo -e "''${GREEN}done''${NC}"
+        return 0
       else
         echo -e "''${RED}failed''${NC}"
         return 1
@@ -83,6 +120,10 @@ writeShellApplication {
           ;;
         -d|--dry-run)
           DRY_RUN=true
+          shift
+          ;;
+        -v|--verbose)
+          VERBOSE=true
           shift
           ;;
         -h|--help)
