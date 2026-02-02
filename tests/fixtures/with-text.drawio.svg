@@ -1,9 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="122px" height="62px" viewBox="-0.5 -0.5 122 62" content="&lt;mxfile host=&quot;test&quot;&gt;&lt;diagram name=&quot;Page-1&quot; id=&quot;texttest&quot;&gt;dZHBDoIwDIafhvuguYh4VVy8eNIrhzErsCRsjND68TIYKga99d//tfuCIiyqemtlJR6QQBVIwiJC9kHAoyjizNmu1AYzrSyzBGO5KICG9Whdg7JqOC2C+ZlYxq11C3XGOqvB2Py+MJIRdCCwbRxxl1L+xPNdGF0xOFgFBgs54NYrN9iQbnks+K6fYZE02EG27kjh83glClU8OFl3bD9unTgFkb/vUw/i/sli63+3xzc=&lt;/diagram&gt;&lt;/mxfile&gt;">
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Test fixture - regenerated with valid compression -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="102px" height="52px" viewBox="0 0 102 52" content="&lt;mxfile host=&quot;Electron&quot; agent=&quot;test-fixture&quot; version=&quot;1.0&quot;&gt;&lt;diagram name=&quot;With Text&quot; id=&quot;with-text&quot;&gt;nZNBb4QgEIV/DXdW0qTX1m53L3vysGcio5KiY0Zctb++qLBKTJOmJB743gw47ykTaT1eSLbVDRUYlnA1MvHBkoS7Z95O0bYkrVZw2kCmv8HDUNZrBV1UaBGN1W0Mc2wayG3EJBEOcVmBJr61lSUcQJZLc6R3rWy10tcXvvEr6LIKN5/4oogz429snpUzkRKijVAQ6jEFM3sVvFiP/fxb8fPdCBr7j/5k7X9I0/tpr64AHbojOZ8WtbNT8IKwbxTMzScm3odKW8hamc/q4IJ3rLK18XKhjUnRIC29oliW450l/IKdwpfllOM0fsAHkIVxh47TbTNeAGuwNLn9sAXmY0l4tQsrhCj9N1I+W3/10HFvY5yw47uQfd3ubxDnHw==&lt;/diagram&gt;&lt;/mxfile&gt;">
   <defs/>
   <g>
-    <rect x="0" y="0" width="120" height="60" fill="#dae8fc" stroke="#6c8ebf" pointer-events="all"/>
-    <g transform="translate(-0.5 -0.5)">
-      <text x="60" y="37" fill="#000000" font-family="Helvetica" font-size="14px" text-anchor="middle">Hello World</text>
-    </g>
+    <rect x="0" y="0" width="100" height="50" rx="7.5" ry="7.5" fill="#ffffff" stroke="#000000" pointer-events="all"/>
+    <g><text x="50" y="30" text-anchor="middle" font-family="Helvetica" font-size="12px">Hello World</text></g>
   </g>
 </svg>

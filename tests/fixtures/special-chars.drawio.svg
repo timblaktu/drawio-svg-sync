@@ -1,9 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="162px" height="82px" viewBox="-0.5 -0.5 162 82" content="&lt;mxfile host=&quot;test&quot;&gt;&lt;diagram name=&quot;Page-1&quot; id=&quot;unicode&quot;&gt;dZLLboMwEEW/hr0gdJG0q5D0sUi3zpqFg01wZTPyOC39+hqYkIBU2cw59z4sS4tVfTRcla+QAUuSNCtJek+S5HqRJAfF/s4FKxussckeDbC4LwqgIofGVqCc6rYleT8JeY6wnXy1ljrYYxhBOXZbKN+7tqyQkl4I0LWuuQkGtSqtxpIMmw/diqBrQxdFoYJ7L+u+2Y0rDGCAnm+hdFfRsTTmNrHfVyj1VUjhZDNGnSFHFwB8J+2uJYlXKObB2xOu8ZEq0HB7e2j2MFYJ0ZnE6KSI0AYKhGHkpRLRQr3S4kD/JyOvNuf/4fjtIZ+F8Pcoim8h+3tc/Ac=&lt;/diagram&gt;&lt;/mxfile&gt;">
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Test fixture - regenerated with valid compression -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="122px" height="52px" viewBox="0 0 122 52" content="&lt;mxfile host=&quot;Electron&quot; agent=&quot;test-fixture&quot; version=&quot;1.0&quot;&gt;&lt;diagram name=&quot;Special Characters&quot; id=&quot;special-chars&quot;&gt;nZM9b4QwDIZ/jXc+dNe7ESi9Lp0YOkfgQqRAaDAH9Nc3AQKkp0pVB4T92MbxGwNhUo83xdrqTRYoIPCKEcJnCAJPP8adHLdUvFiAv4OMf+EKbVrPC+ycRJJSEG9dmMumwZwcxpSSg5v2IYXbtWUlPoAsZ+KRvvOCqoVeTt7OX5GXle3se3MkTMGLwMzqQZgoKclBNlCPCQqjldVi+ezL35K3syls6B/1wVJ/Z6Jfp4XgLPSXYsKOtF0ae64/s7rd7M/ejBObl76azTfBJITYN0Z6husTRKfZSCBKIL1AFME1XZp2NFmJleybAs2Z9CnjoeKEWctyEx30PmlWUS20589Nfo68qnBHRTge0KMEuxA3lDWSmrQ/7Lfq292sDjdqb5qti1Rupb8KrfmqtbsGmh82Yc07/DJh+g0=&lt;/diagram&gt;&lt;/mxfile&gt;">
   <defs/>
   <g>
-    <rect x="0" y="0" width="160" height="80" fill="#fff2cc" stroke="#d6b656" pointer-events="all"/>
-    <g transform="translate(-0.5 -0.5)">
-      <text x="80" y="45" fill="#000000" font-family="Helvetica" font-size="14px" text-anchor="middle">Héllo Wörld 日本語</text>
-    </g>
+    <rect x="0" y="0" width="120" height="50" fill="#ffffff" stroke="#000000"/>
+    <g><text x="60" y="30" text-anchor="middle" font-family="Helvetica" font-size="12px">&lt;test&gt; &amp; "quotes" ñ 日本語</text></g>
   </g>
 </svg>

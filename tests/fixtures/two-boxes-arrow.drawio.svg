@@ -1,15 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="322px" height="62px" viewBox="-0.5 -0.5 322 62" content="&lt;mxfile host=&quot;test&quot;&gt;&lt;diagram name=&quot;Page-1&quot; id=&quot;arrowtest&quot;&gt;zZRNb4MwDIZ/DfdAWLfrtq7d5dJT9xwlBkJDjBJK2/36OSVMFbTSph2ac/A8iZ0X25I0K5u1URV/wQRUJIl5RtJFlMR3cXxe8b5zwdoGU23tYGCWv4ECQ+3t6kAOOB7zHGDrBzVoA8b4smPGuVjua8n5nL+kYo8baoOuuV9kYrkjWyjQGwKsHPDGFwY0lE7W0OGaegTiCIy+guXcSqzJIPShS5NcOnkPi21eSEMQNYl5Q0FdiCOpTY/R/qVa2D0NtUPYq24NWKEHl2LX9RcvDDCHV9NJB+qMSW6Dv+ZLV6Y1Y8bXLhJlxiW+6EcQaM24+WKDqDVY5qLXb9B4S0MeyVCkZb5k+RdBN5jFqFhMEF2LxANS6xIjhcOaJwBFrU0r+1QDuoT8JSMX2/P/cPLukI9C+DuJ4jvI/u6Lfwc=&lt;/diagram&gt;&lt;/mxfile&gt;">
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Test fixture - regenerated with valid compression -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="262px" height="52px" viewBox="0 0 262 52" content="&lt;mxfile host=&quot;Electron&quot; agent=&quot;test-fixture&quot; version=&quot;1.0&quot;&gt;&lt;diagram name=&quot;Two Boxes Arrow&quot; id=&quot;two-boxes&quot;&gt;zZTBToQwEEC/pncWNPG6IK4HPe3Bc0NHWlMYUoYF/HrL0i40ZJNVD3ogYV5n2ukrlCVZNRwMb+QrCtAsjsTAkkcWx5F9pnAMwtIoMYPdAo7qExz0aZ0S0AaJhKhJNSEssK6hoIBxY7AP095Rh6s2vIQNOBZcb+mbEiRn+nAfLfwZVCn9yrvoPJLkLNqzaa8RSzKDSAHyA9WQgZ5ceRfztE+3JV96M1DTD+rjuf7Eded2m+JgwX7mLY3egsGuFjCV2YnSXiqCY8OLabS3R26ZpErbaGdft125Rk9gCIYV2na59HoArIDMaON+Jd55lyvn/iy4O+ryUnlVheXOxk2ikiui0n8mypd4S38u7m4jCIT9vVyIhiSWWHOdLzQNFS45L4iNE/cBRKO7K3hHeKPWFjtTQPDtEzclUHDKU4ffV29Ac1Kn8Nb4tdgzX90eLm91zSb5Fw==&lt;/diagram&gt;&lt;/mxfile&gt;">
   <defs/>
   <g>
-    <rect x="0" y="0" width="120" height="60" fill="#d5e8d4" stroke="#82b366" pointer-events="all"/>
-    <g transform="translate(-0.5 -0.5)">
-      <text x="60" y="37" fill="#000000" font-family="Helvetica" font-size="14px" text-anchor="middle">Start</text>
-    </g>
-    <rect x="200" y="0" width="120" height="60" fill="#f8cecc" stroke="#b85450" pointer-events="all"/>
-    <g transform="translate(-0.5 -0.5)">
-      <text x="260" y="37" fill="#000000" font-family="Helvetica" font-size="14px" text-anchor="middle">End</text>
-    </g>
-    <path d="M 120 30 L 193.63 30" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="stroke"/>
-    <path d="M 198.88 30 L 191.88 33.5 L 193.63 30 L 191.88 26.5 Z" fill="#000000" stroke="#000000" stroke-miterlimit="10" pointer-events="all"/>
+    <rect x="0" y="0" width="80" height="50" fill="#ffffff" stroke="#000000"/>
+    <rect x="180" y="0" width="80" height="50" fill="#ffffff" stroke="#000000"/>
+    <path d="M 80 25 L 180 25" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="stroke"/>
   </g>
 </svg>

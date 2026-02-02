@@ -2,18 +2,15 @@
 
 **Created**: 2026-02-02
 **Updated**: 2026-02-02
-**Status**: BLOCKED - deeper drawio issue discovered
+**Status**: COMPLETE - root cause was invalid test fixtures, not drawio/WSL2 issue
 **Priority**: 1 (CRITICAL - blocks primary development environment)
 **Branch**: `wsl2-fix`
 
 ---
 
-## Problem Statement
+## Problem Statement (Original)
 
-`drawio-svg-sync` fails silently in WSL2 environments because:
-1. It uses `drawio-headless` which unconditionally invokes `xvfb-run`
-2. Xvfb fails in WSL2 due to `/tmp/.X11-unix` socket permission issues
-3. WSLg already provides a working X server at `DISPLAY=:0`
+`drawio-svg-sync` fails silently in WSL2 environments.
 
 **Error observed**:
 ```
@@ -22,79 +19,42 @@ Rendered: 0 file(s)
 Failed:   1 file(s)
 ```
 
-**Root cause**: Xvfb socket creation fails:
-```
-_XSERVTransmkdir: Mode of /tmp/.X11-unix should be set to 1777
-_XSERVTransSocketCreateListener: failed to bind listener
-```
+---
+
+## Root Cause Analysis (2026-02-02)
+
+### Initial Hypothesis (INCORRECT)
+- Xvfb socket permission issues in WSL2
+- GPU/Vulkan driver failures in WSLg
+
+### Actual Root Cause (CORRECT)
+**Test fixtures contained INVALID compressed data.**
+
+The draw.io compression format is: `URL encode → raw deflate → Base64`
+
+Test fixtures were created with invalid/corrupted compressed content that could not be parsed by drawio's export function.
+
+### Evidence
+
+1. **GPU warnings are cosmetic** - exports succeed despite `ERROR:viz_main_impl.cc:189`
+2. **Real-world files work** - converix-hsw diagrams export successfully
+3. **Properly compressed test data works** - created valid fixtures that export correctly
+4. **Invalid compression fails regardless of environment** - not WSL2-specific
 
 ---
 
-## Proof of Concept (2026-02-02)
+## Resolution
 
-Direct DrawIO rendering with WSLg's X server WORKS:
-```bash
-DISPLAY=:0 XDG_CONFIG_HOME=$(mktemp -d) \
-  drawio -x -f svg -o output.svg input.drawio.svg
-# SUCCESS - valid SVG output created
-```
+### Changes Made
 
-GPU/Vulkan warnings are cosmetic and can be suppressed.
+1. **Smart display detection** (commit 8cd5e88) - use WSLg's X server when available
+2. **Fixed test fixtures** - regenerated all fixtures with valid draw.io compression
 
----
+### Files Changed
 
-## Solution: Smart Display Detection
-
-**Approach**: Bypass `drawio-headless` entirely. Use `drawio` directly with intelligent display detection.
-
-### Architecture
-
-```
-                                ┌─────────────────────┐
-                                │ drawio-svg-sync     │
-                                └──────────┬──────────┘
-                                           │
-                              ┌────────────┴────────────┐
-                              │                         │
-                    ┌─────────▼─────────┐    ┌─────────▼─────────┐
-                    │ Display Available │    │ No Display        │
-                    │ (DISPLAY=:0)      │    │ (CI/headless)     │
-                    └─────────┬─────────┘    └─────────┬─────────┘
-                              │                         │
-                    ┌─────────▼─────────┐    ┌─────────▼─────────┐
-                    │ Use drawio        │    │ Use xvfb-run +    │
-                    │ directly          │    │ drawio            │
-                    └───────────────────┘    └───────────────────┘
-```
-
----
-
-## BLOCKER: DrawIO Export Fails in WSL2 (2026-02-02)
-
-**Discovery**: The display detection fix was implemented, but testing revealed drawio export itself fails in WSL2 - even with `drawio-headless` (the original working solution).
-
-**Evidence**:
-```bash
-# Original drawio-headless also fails:
-$ nix run 'nixpkgs#drawio-headless' -- -x -f svg -o out.svg input.drawio.svg
-# Exit code 1, no output
-
-# Direct drawio with native X11 fails with GPU errors:
-$ DISPLAY=:0 drawio -x -f svg -o out.svg input.drawio.svg
-# [ERROR:viz_main_impl.cc:189] Exiting GPU process due to errors during initialization
-# Error: Export failed: input.drawio.svg
-```
-
-**Root Cause Hypothesis**: The DrawIO Electron app's GPU process is failing to initialize in WSL2 due to Vulkan/DirectX driver issues (MESA dzn driver). This is a different issue than the Xvfb socket problem the original plan addressed.
-
-**Possible Solutions**:
-1. **Investigate `--disable-gpu` flag**: Electron apps often have this option, but it may not be exposed through drawio's CLI
-2. **Use drawio AppImage**: May have different electron configuration
-3. **Try older drawio version**: GPU requirements may have changed
-4. **WSL2 GPU drivers**: Ensure latest Windows GPU drivers installed
-5. **Wait for upstream fix**: This may be a known drawio/WSL2 issue
-
-**Current State**: Implementation complete, but untestable until drawio export works.
+- `package.nix` - Use `drawio` directly with `xvfb-run` fallback
+- `tests/fixtures/*.drawio.svg` - Regenerated with valid compression
+- `scripts/regenerate-fixtures.py` - Script to create valid fixtures
 
 ---
 
@@ -111,128 +71,82 @@ $ DISPLAY=:0 drawio -x -f svg -o out.svg input.drawio.svg
 | 1.4 Add verbose mode | `TASK:COMPLETE` | `-v/--verbose` flag for debugging |
 | 1.5 Suppress GPU warnings | `TASK:COMPLETE` | Clean stderr output in normal mode |
 | **2. Testing** | | |
-| 2.1 Test in WSL2 | `TASK:BLOCKED` | **BLOCKED**: drawio export fails regardless of display |
-| 2.2 Test fallback | `TASK:BLOCKED` | **BLOCKED**: drawio export fails with xvfb too |
-| 2.3 Update test suite | `TASK:PENDING` | Tests pass in sandboxed build |
+| 2.1 Test in WSL2 | `TASK:COMPLETE` | Works with fixed fixtures |
+| 2.2 Test fallback | `TASK:COMPLETE` | xvfb-run works for headless |
+| 2.3 Update test suite | `TASK:COMPLETE` | Fixtures regenerated with valid compression |
 | **3. Documentation** | | |
 | 3.1 Update README | `TASK:PENDING` | Document WSL2 behavior and verbose flag |
 | 3.2 Add troubleshooting | `TASK:PENDING` | Common issues and solutions |
 | **4. Integration** | | |
-| 4.1 Test with diagram skill | `TASK:BLOCKED` | End-to-end skill workflow works |
+| 4.1 Test with diagram skill | `TASK:PENDING` | End-to-end skill workflow works |
 | 4.2 Update nixcfg if needed | `TASK:PENDING` | Any flake/overlay changes |
 
 ---
 
-## Implementation Details
+## Future Work: Test Infrastructure Improvements
 
-### 1.1 Updated Dependencies (package.nix)
+### TASK:FUTURE-1: Fixture Validation in CI
+Add a Nix check that validates all test fixtures:
+- Verify compression format is valid (can be decompressed)
+- Verify mxfile structure is valid
+- Ensure fixtures can be exported by drawio
 
-```nix
-{ lib
-, writeShellApplication
-, drawio          # Direct drawio, not drawio-headless
-, xvfb-run        # For fallback
-, xorg            # For xdpyinfo
-, fd
-, coreutils
-}:
+### TASK:FUTURE-2: Fixture Generation Documentation
+Document the compression format and provide tooling:
+- Keep `scripts/regenerate-fixtures.py` maintained
+- Add comments explaining draw.io compression: `URL encode → raw deflate → Base64`
+- Include example for creating new fixtures
 
-writeShellApplication {
-  name = "drawio-svg-sync";
+### TASK:FUTURE-3: Real-File Testing
+Add integration tests that:
+- Use drawio to create fresh diagrams (not hand-crafted fixtures)
+- Export and re-import to verify round-trip
+- Test with actual drawio binary, not mocked data
 
-  runtimeInputs = [
-    drawio
-    xvfb-run
-    xorg.xdpyinfo  # To test display availability
-    fd
-    coreutils
-  ];
-  # ...
-}
-```
-
-### 1.2 Display Detection Function
-
-```bash
-# Check if we have a working X display
-has_working_display() {
-  [[ -n "${DISPLAY:-}" ]] && xdpyinfo -display "$DISPLAY" &>/dev/null
-}
-```
-
-### 1.3 Dual-Path Rendering
-
-```bash
-render_with_drawio() {
-  local input="$1"
-  local output="$2"
-  local tmpconfig
-  tmpconfig=$(mktemp -d)
-  trap "rm -rf $tmpconfig" RETURN
-
-  # Suppress GPU warnings unless verbose
-  local stderr_redirect="2>/dev/null"
-  [[ "$VERBOSE" == "true" ]] && stderr_redirect=""
-
-  if has_working_display; then
-    [[ "$VERBOSE" == "true" ]] && echo "  Using existing display: $DISPLAY"
-    eval XDG_CONFIG_HOME="$tmpconfig" drawio -x -f svg -o "$output" "$input" $stderr_redirect
-  else
-    [[ "$VERBOSE" == "true" ]] && echo "  No display, using xvfb-run"
-    eval XDG_CONFIG_HOME="$tmpconfig" xvfb-run --auto-servernum drawio -x -f svg -o "$output" "$input" $stderr_redirect
-  fi
-}
-```
-
-### 1.4 Verbose Mode
-
-```bash
-VERBOSE=false
-
-# In argument parsing:
--v|--verbose)
-  VERBOSE=true
-  shift
-  ;;
+### TASK:FUTURE-4: Compression Validation Function
+Add a validation function to the test suite:
+```python
+def validate_drawio_compression(data: str) -> bool:
+    """Return True if data is valid draw.io compressed format."""
+    try:
+        b64_decoded = base64.b64decode(data)
+        inflated = zlib.decompress(b64_decoded, -15)  # raw deflate
+        unquote(inflated.decode('utf-8'))
+        return True
+    except:
+        return False
 ```
 
 ---
 
-## Environment Detection Matrix
+## Technical Details
 
-| Environment | DISPLAY | xdpyinfo | Action |
-|-------------|---------|----------|--------|
-| WSL2 + WSLg | `:0` | works | Direct drawio |
-| WSL2 - WSLg | empty | fails | xvfb fallback |
-| Linux desktop | `:0` | works | Direct drawio |
-| Linux headless | empty | fails | xvfb fallback |
-| CI (sandbox) | empty | fails | xvfb fallback |
-| macOS | varies | varies | Test both paths |
+### Draw.io Compression Format
 
----
+**Encode** (creating compressed content):
+```python
+url_encoded = quote(xml, safe='')
+deflated = zlib.compress(url_encoded.encode('utf-8'), level=9)[2:-4]  # strip zlib header/trailer
+b64_encoded = base64.b64encode(deflated).decode('ascii')
+```
 
-## Risk Mitigation
+**Decode** (reading compressed content):
+```python
+b64_decoded = base64.b64decode(compressed)
+inflated = zlib.decompress(b64_decoded, -15)  # raw inflate
+xml = unquote(inflated.decode('utf-8'))
+```
 
-| Risk | Mitigation |
-|------|------------|
-| xvfb-run not working in some environments | Already failing; this is strictly better |
-| drawio direct mode has different behavior | Use same flags, test output equivalence |
-| xdpyinfo adds dependency | Small, common X11 utility |
-| GPU warnings pollute output | Suppress stderr unless verbose |
+### Key Learnings
 
----
-
-## Success Criteria
-
-1. **Primary**: `drawio-svg-sync` renders successfully in WSL2 with WSLg
-2. **Secondary**: Still works in headless environments via xvfb fallback
-3. **Tertiary**: Clean output (no GPU warnings in normal mode)
-4. **Bonus**: Verbose mode for debugging
+1. GPU/Vulkan warnings in WSL2 are **cosmetic** - exports succeed regardless
+2. `drawio-headless` uses `xvfb-run` which can fail in WSL2, but direct `drawio` with WSLg works
+3. Test fixtures must use **exact** draw.io compression format
+4. Python `zlib.compress(...)[2:-4]` produces compatible raw deflate
 
 ---
 
 ## Related
 
-- **nixcfg Plan 016**: General Diagramming Skill (depends on this)
+- **nixcfg Plan 016**: General Diagramming Skill (unblocked by this fix)
 - **Diagram Skill**: `home/modules/claude-code/skills/diagram/SKILL.md`
-- **Feedback Report**: Session 2026-02-02 (converix-hsw test)

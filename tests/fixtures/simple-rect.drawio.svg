@@ -1,6 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="121px" height="61px" viewBox="-0.5 -0.5 121 61" content="&lt;mxfile host=&quot;test&quot;&gt;&lt;diagram name=&quot;Page-1&quot; id=&quot;simple&quot;&gt;dZHBEoIgEIafhrvCZHXuWnce64xshoOwIVLt6UOEJptz+/bbn11YCIuqORhZiSckUAeSsIawXRDwWRTzhwu3wQlSrSxzAuPeKIDabmjdgLRqNi2C+5VYJq11C3UPOqvB2MK+NZIRdSCwIQ4x5Uq+xdNVGJ0xPVgFBmvp4OqZG2zJsHoVwq4rLJIGO8z2HSl8Hm9FoYpnJ+uu7cejJ05BFO/6NIPEf7LY+t/j8Qc=&lt;/diagram&gt;&lt;/mxfile&gt;">
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Test fixture - regenerated with valid compression -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="102px" height="52px" viewBox="0 0 102 52" content="&lt;mxfile host=&quot;Electron&quot; agent=&quot;test-fixture&quot; version=&quot;1.0&quot;&gt;&lt;diagram name=&quot;Simple Rectangle&quot; id=&quot;simple-rect&quot;&gt;nZPBboQgEIafhjtqmvTa2u32sicPPRMZhRQdg+OqffqiwioxTZqSmDjfzID//MKyvJmuVnTqhhIMS7mcWPbG0pS7ZwnnKKytlhtIdlDob/AwlA1aQh8VEqIh3cWwxLaFkiImrMUxLqvQxKd2ooYTKEphzvRTS1IbfX7iO/8AXatwcsLXTHZh/IUtWjnLcotIEQqJZsrBLLMKs9i2ff9b8ePbLLT0j/50678LM3i1G+hpDvItDq2Epd7t8DoqTVB0olyyo/PaMUWNcVHiXittTI4G7dqbVetyvCeLX3DI8HW5zFmA13QHSzAd0FnQLusK2ADZ2cXj7pF3IuXq4E/wTfjfon60/jo2x/3kYlMdP/jq6w4XILv8AA==&lt;/diagram&gt;&lt;/mxfile&gt;">
   <defs/>
   <g>
-    <rect x="0" y="0" width="120" height="60" fill="#ffffff" stroke="#000000" pointer-events="all"/>
+    <rect x="0" y="0" width="100" height="50" fill="#ffffff" stroke="#000000" pointer-events="all"/>
   </g>
 </svg>
