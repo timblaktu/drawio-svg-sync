@@ -75,7 +75,7 @@ Test fixtures were created with invalid/corrupted compressed content that could 
 | 2.2 Test fallback | `TASK:COMPLETE` | xvfb-run works for headless |
 | 2.3 Update test suite | `TASK:COMPLETE` | Fixtures regenerated with valid compression |
 | **3. Documentation** | | |
-| 3.1 Update README | `TASK:PENDING` | Document WSL2 behavior and verbose flag |
+| 3.1 Update README | `TASK:COMPLETE` | Document WSL2 behavior and verbose flag |
 | 3.2 Add troubleshooting | `TASK:PENDING` | Common issues and solutions |
 | **4. Integration** | | |
 | 4.1 Test with diagram skill | `TASK:PENDING` | End-to-end skill workflow works |

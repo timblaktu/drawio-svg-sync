@@ -56,6 +56,9 @@ drawio-svg-sync -a
 # Dry run (show what would be rendered)
 drawio-svg-sync -d -a
 
+# Verbose mode (shows display detection, useful for debugging)
+drawio-svg-sync -v -a
+
 # Show help
 drawio-svg-sync -h
 ```
@@ -75,7 +78,16 @@ drawio-svg-sync -h
 - An embedded `mxGraphModel` XML block (the source of truth)
 - An SVG body (the rendered visualization)
 
-This tool uses `drawio-headless` to export the SVG from the embedded XML, regenerating the visible SVG body.
+This tool uses the `drawio` desktop application in export mode (`drawio -x`) to regenerate the SVG body from the embedded XML.
+
+### Display handling
+
+Draw.io requires a display to render (it uses Electron internally). The tool automatically handles this:
+
+1. **WSLg/Native display**: If a working X11 display is available (WSLg in WSL2, native Linux, etc.), it uses that directly
+2. **Headless fallback**: If no display is available, it automatically uses `xvfb-run` to create a virtual framebuffer
+
+Use `-v/--verbose` to see which display mode is being used.
 
 ## Testing
 
@@ -97,7 +109,7 @@ nix develop
 ./tests/run-tests.sh
 ```
 
-The full test suite renders actual `.drawio.svg` files and requires a display (X11/Wayland) since drawio-headless uses Electron.
+The full test suite renders actual `.drawio.svg` files and requires a display (or xvfb-run fallback) since drawio uses Electron.
 
 ### Test fixtures
 
@@ -115,7 +127,3 @@ The `tests/fixtures/` directory contains various test cases:
 ## License
 
 MIT - see [LICENSE](LICENSE)
-
-## Note on Dependencies
-
-This flake depends on `drawio-headless` which has an unfree license (`asl20 unfreeRedistributable`). The flake handles this automatically - no need to set `NIXPKGS_ALLOW_UNFREE`.
