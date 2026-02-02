@@ -124,6 +124,77 @@ The `tests/fixtures/` directory contains various test cases:
 - `invalid-corrupt.drawio.svg` - Invalid content (tests error handling)
 - `not-drawio.svg` - Regular SVG without draw.io content (tests extension filtering)
 
+## Troubleshooting
+
+### GPU/Vulkan warnings
+
+You may see warnings like these in verbose mode or in stderr:
+
+```
+ERROR:viz_main_impl.cc:189 GPU process launch failed
+ERROR:gpu_init.cc:526 Passthrough is not supported
+```
+
+**These are cosmetic** and do not affect rendering. Draw.io/Electron logs these when hardware GPU acceleration isn't available (common in WSL2, containers, headless servers). The export still succeeds.
+
+### Render fails silently ("failed" with no error)
+
+If rendering fails without a clear error message:
+
+1. **Check the file format**: The embedded XML may be corrupted. Use verbose mode:
+   ```bash
+   drawio-svg-sync -v diagram.drawio.svg
+   ```
+
+2. **Validate compression**: Draw.io uses a specific compression format (`URL encode → raw deflate → Base64`). Hand-edited or incorrectly generated files may have invalid compression.
+
+3. **Test with Draw.io directly**: Open the file in Draw.io desktop to see if it can parse the content.
+
+### Display detection issues
+
+Use verbose mode to see which display path is being used:
+
+```bash
+drawio-svg-sync -v diagram.drawio.svg
+```
+
+Output will show:
+- `Using existing display: :0` - Using WSLg or native X11
+- `No working display, using xvfb-run` - Using virtual framebuffer fallback
+
+If neither works:
+- **WSL2**: Ensure WSLg is enabled (Windows 11 or Windows 10 with WSLg installed)
+- **Headless Linux**: Install xvfb (`nix-shell -p xvfb-run` or `apt install xvfb`)
+
+### WSL2-specific issues
+
+1. **WSLg not working**: Check that `/tmp/.X11-unix/X0` exists. If not, restart WSL:
+   ```powershell
+   # From PowerShell
+   wsl --shutdown
+   ```
+
+2. **xvfb-run permission errors**: Try running with direct display first, or ensure your user has permission to create virtual displays.
+
+### Creating valid test fixtures
+
+If you need to create new `.drawio.svg` test files:
+
+1. **Best approach**: Create the diagram in Draw.io desktop and save as `.drawio.svg`
+
+2. **Programmatic approach**: Use the compression format:
+   ```python
+   import zlib, base64
+   from urllib.parse import quote
+
+   # Encode
+   url_encoded = quote(xml_content, safe='')
+   deflated = zlib.compress(url_encoded.encode('utf-8'), level=9)[2:-4]
+   compressed = base64.b64encode(deflated).decode('ascii')
+   ```
+
+See `scripts/regenerate-fixtures.py` for a complete example.
+
 ## License
 
 MIT - see [LICENSE](LICENSE)

@@ -76,7 +76,7 @@ Test fixtures were created with invalid/corrupted compressed content that could 
 | 2.3 Update test suite | `TASK:COMPLETE` | Fixtures regenerated with valid compression |
 | **3. Documentation** | | |
 | 3.1 Update README | `TASK:COMPLETE` | Document WSL2 behavior and verbose flag |
-| 3.2 Add troubleshooting | `TASK:PENDING` | Common issues and solutions |
+| 3.2 Add troubleshooting | `TASK:COMPLETE` | Common issues and solutions |
 | **4. Integration** | | |
 | 4.1 Test with diagram skill | `TASK:PENDING` | End-to-end skill workflow works |
 | 4.2 Update nixcfg if needed | `TASK:PENDING` | Any flake/overlay changes |
