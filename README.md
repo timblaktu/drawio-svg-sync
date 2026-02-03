@@ -75,10 +75,15 @@ drawio-svg-sync -h
 ## How it works
 
 `.drawio.svg` files contain:
-- An embedded `mxGraphModel` XML block (the source of truth)
+- A `content` attribute on the `<svg>` tag with compressed `mxGraphModel` XML (the source of truth)
 - An SVG body (the rendered visualization)
 
-This tool uses the `drawio` desktop application in export mode (`drawio -x`) to regenerate the SVG body from the embedded XML.
+This tool:
+1. Extracts the `content` attribute from the original file
+2. Uses the `drawio` desktop application in export mode (`drawio -x`) to regenerate the SVG body
+3. Re-injects the `content` attribute into the rendered SVG
+
+This preserves editability in DrawIO desktop while ensuring the rendered output matches the embedded XML source.
 
 ### Display handling
 

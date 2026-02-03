@@ -5,184 +5,217 @@
 , xorg               # For xdpyinfo to test display availability
 , fd
 , coreutils
+, gnugrep            # For extracting content attribute
+, python3            # For re-injecting content attribute safely (no escaping issues)
 }:
 
 writeShellApplication {
   name = "drawio-svg-sync";
 
-  runtimeInputs = [ drawio xvfb-run xorg.xdpyinfo fd coreutils ];
+  runtimeInputs = [ drawio xvfb-run xorg.xdpyinfo fd coreutils gnugrep python3 ];
 
   text = ''
-    # Colors for output
-    RED='\033[0;31m'
-    GREEN='\033[0;32m'
-    YELLOW='\033[0;33m'
-    NC='\033[0m' # No Color
+        # Colors for output
+        RED='\033[0;31m'
+        GREEN='\033[0;32m'
+        YELLOW='\033[0;33m'
+        NC='\033[0m' # No Color
 
-    # Verbose mode (off by default)
-    VERBOSE=false
+        # Verbose mode (off by default)
+        VERBOSE=false
 
-    usage() {
-      echo "Usage: drawio-svg-sync [OPTIONS] [FILE...]"
-      echo ""
-      echo "Re-render .drawio.svg files from embedded mxGraphModel XML."
-      echo ""
-      echo "OPTIONS:"
-      echo "  -a, --all      Find and render all .drawio.svg files recursively"
-      echo "  -d, --dry-run  Show what would be rendered without executing"
-      echo "  -v, --verbose  Show detailed output including display detection"
-      echo "  -h, --help     Show this help message"
-      echo ""
-      echo "EXAMPLES:"
-      echo "  drawio-svg-sync docs/diagram.drawio.svg     # Render single file"
-      echo "  drawio-svg-sync -a                          # Render all .drawio.svg files"
-      echo "  drawio-svg-sync -d -a                       # Dry run for all files"
-      echo "  drawio-svg-sync -v -a                       # Verbose mode for debugging"
-    }
+        usage() {
+          # Ignore SIGPIPE (happens when piped to grep -q)
+          trap "" PIPE
+          echo "Usage: drawio-svg-sync [OPTIONS] [FILE...]"
+          echo ""
+          echo "Re-render .drawio.svg files from embedded mxGraphModel XML."
+          echo ""
+          echo "OPTIONS:"
+          echo "  -a, --all      Find and render all .drawio.svg files recursively"
+          echo "  -d, --dry-run  Show what would be rendered without executing"
+          echo "  -v, --verbose  Show detailed output including display detection"
+          echo "  -h, --help     Show this help message"
+          echo ""
+          echo "EXAMPLES:"
+          echo "  drawio-svg-sync docs/diagram.drawio.svg     # Render single file"
+          echo "  drawio-svg-sync -a                          # Render all .drawio.svg files"
+          echo "  drawio-svg-sync -d -a                       # Dry run for all files"
+          echo "  drawio-svg-sync -v -a                       # Verbose mode for debugging"
+          trap - PIPE
+        }
 
-    # Check if we have a working X display (e.g., WSLg provides DISPLAY=:0)
-    has_working_display() {
-      [[ -n "''${DISPLAY:-}" ]] && xdpyinfo -display "$DISPLAY" &>/dev/null
-    }
+        # Check if we have a working X display (e.g., WSLg provides DISPLAY=:0)
+        has_working_display() {
+          [[ -n "''${DISPLAY:-}" ]] && xdpyinfo -display "$DISPLAY" &>/dev/null
+        }
 
-    render_file() {
-      local file="$1"
-      local dry_run="''${2:-false}"
+        render_file() {
+          local file="$1"
+          local dry_run="''${2:-false}"
 
-      if [[ ! -f "$file" ]]; then
-        echo -e "''${RED}Error: File not found: $file''${NC}" >&2
-        return 1
-      fi
+          if [[ ! -f "$file" ]]; then
+            echo -e "''${RED}Error: File not found: $file''${NC}" >&2
+            return 1
+          fi
 
-      if [[ ! "$file" =~ \.drawio\.svg$ ]]; then
-        echo -e "''${YELLOW}Warning: Skipping non-.drawio.svg file: $file''${NC}" >&2
-        return 0
-      fi
+          if [[ ! "$file" =~ \.drawio\.svg$ ]]; then
+            echo -e "''${YELLOW}Warning: Skipping non-.drawio.svg file: $file''${NC}" >&2
+            return 0
+          fi
 
-      if [[ "$dry_run" == "true" ]]; then
-        echo -e "''${YELLOW}[dry-run]''${NC} Would render: $file"
-        return 0
-      fi
+          if [[ "$dry_run" == "true" ]]; then
+            echo -e "''${YELLOW}[dry-run]''${NC} Would render: $file"
+            return 0
+          fi
 
-      echo -n "Rendering: $file ... "
+          echo -n "Rendering: $file ... "
 
-      # Export to temporary file, then move back
-      # drawio -x exports based on embedded XML, regenerating SVG body
-      local tmpfile tmpconfig
-      tmpfile=$(mktemp --suffix=.svg)
-      tmpconfig=$(mktemp -d)
+          # Extract content attribute to preserve it (DrawIO desktop needs this to edit)
+          # Use a temp file to avoid variable interpolation issues with special characters
+          local content_file has_content
+          content_file=$(mktemp)
+          has_content=false
 
-      # Cleanup on function return
-      cleanup() { rm -f "$tmpfile"; rm -rf "$tmpconfig"; }
-      trap cleanup RETURN
+          if grep -o 'content="[^"]*"' "$file" > "$content_file" 2>/dev/null; then
+            has_content=true
+            [[ "$VERBOSE" == "true" ]] && echo -e "\n  ''${YELLOW}Preserving content attribute for DrawIO editability''${NC}"
+          fi
 
-      local result=0
+          # Export to temporary file, then move back
+          # drawio -x exports based on embedded XML, regenerating SVG body
+          local tmpfile tmpconfig
+          tmpfile=$(mktemp --suffix=.svg)
+          tmpconfig=$(mktemp -d)
 
-      if has_working_display; then
-        # Use existing display (WSLg, native X11, etc.)
-        [[ "$VERBOSE" == "true" ]] && echo -e "\n  ''${YELLOW}Using display: $DISPLAY''${NC}"
-        if [[ "$VERBOSE" == "true" ]]; then
-          XDG_CONFIG_HOME="$tmpconfig" drawio -x -f svg -o "$tmpfile" "$file" || result=$?
-        else
-          # Suppress GPU/Vulkan warnings in normal mode
-          XDG_CONFIG_HOME="$tmpconfig" drawio -x -f svg -o "$tmpfile" "$file" 2>/dev/null || result=$?
-        fi
-      else
-        # No display available, use xvfb-run
-        [[ "$VERBOSE" == "true" ]] && echo -e "\n  ''${YELLOW}No display, using xvfb-run''${NC}"
-        if [[ "$VERBOSE" == "true" ]]; then
-          XDG_CONFIG_HOME="$tmpconfig" xvfb-run --auto-servernum drawio -x -f svg -o "$tmpfile" "$file" || result=$?
-        else
-          XDG_CONFIG_HOME="$tmpconfig" xvfb-run --auto-servernum drawio -x -f svg -o "$tmpfile" "$file" 2>/dev/null || result=$?
-        fi
-      fi
+          # Cleanup on function return
+          cleanup() { rm -f "$tmpfile" "$content_file"; rm -rf "$tmpconfig"; }
+          trap cleanup RETURN
 
-      if [[ $result -eq 0 && -s "$tmpfile" ]]; then
-        mv "$tmpfile" "$file"
-        echo -e "''${GREEN}done''${NC}"
-        return 0
-      else
-        echo -e "''${RED}failed''${NC}"
-        return 1
-      fi
-    }
+          local result=0
 
-    # Parse arguments
-    ALL=false
-    DRY_RUN=false
-    FILES=()
+          if has_working_display; then
+            # Use existing display (WSLg, native X11, etc.)
+            [[ "$VERBOSE" == "true" ]] && echo -e "\n  ''${YELLOW}Using display: $DISPLAY''${NC}"
+            if [[ "$VERBOSE" == "true" ]]; then
+              XDG_CONFIG_HOME="$tmpconfig" drawio -x -f svg -o "$tmpfile" "$file" || result=$?
+            else
+              # Suppress GPU/Vulkan warnings in normal mode
+              XDG_CONFIG_HOME="$tmpconfig" drawio -x -f svg -o "$tmpfile" "$file" 2>/dev/null || result=$?
+            fi
+          else
+            # No display available, use xvfb-run
+            [[ "$VERBOSE" == "true" ]] && echo -e "\n  ''${YELLOW}No display, using xvfb-run''${NC}"
+            if [[ "$VERBOSE" == "true" ]]; then
+              XDG_CONFIG_HOME="$tmpconfig" xvfb-run --auto-servernum drawio -x -f svg -o "$tmpfile" "$file" || result=$?
+            else
+              XDG_CONFIG_HOME="$tmpconfig" xvfb-run --auto-servernum drawio -x -f svg -o "$tmpfile" "$file" 2>/dev/null || result=$?
+            fi
+          fi
 
-    while [[ $# -gt 0 ]]; do
-      case $1 in
-        -a|--all)
-          ALL=true
-          shift
-          ;;
-        -d|--dry-run)
-          DRY_RUN=true
-          shift
-          ;;
-        -v|--verbose)
-          VERBOSE=true
-          shift
-          ;;
-        -h|--help)
-          usage
-          exit 0
-          ;;
-        -*)
-          echo -e "''${RED}Unknown option: $1''${NC}" >&2
+          if [[ $result -eq 0 && -s "$tmpfile" ]]; then
+            # Re-inject content attribute if it was present (makes file editable in DrawIO desktop)
+            if [[ "$has_content" == "true" ]]; then
+              # Use Python to inject content attribute safely (no shell escaping issues)
+              python3 -c "
+    import re, sys
+    with open('$content_file', 'r') as f:
+        content_attr = f.read().strip()
+    with open('$tmpfile', 'r') as f:
+        svg_data = f.read()
+    # Insert content attribute after <svg tag (first occurrence only)
+    svg_data = re.sub(r'<svg\s', f'<svg {content_attr} ', svg_data, count=1)
+    with open('$tmpfile', 'w') as f:
+        f.write(svg_data)
+    "
+              [[ "$VERBOSE" == "true" ]] && echo -e "\n  ''${GREEN}Re-injected content attribute''${NC}"
+            fi
+
+            mv "$tmpfile" "$file"
+            echo -e "''${GREEN}done''${NC}"
+            return 0
+          else
+            echo -e "''${RED}failed''${NC}"
+            return 1
+          fi
+        }
+
+        # Parse arguments
+        ALL=false
+        DRY_RUN=false
+        FILES=()
+
+        while [[ $# -gt 0 ]]; do
+          case $1 in
+            -a|--all)
+              ALL=true
+              shift
+              ;;
+            -d|--dry-run)
+              DRY_RUN=true
+              shift
+              ;;
+            -v|--verbose)
+              VERBOSE=true
+              shift
+              ;;
+            -h|--help)
+              usage
+              exit 0
+              ;;
+            -*)
+              echo -e "''${RED}Unknown option: $1''${NC}" >&2
+              usage
+              exit 1
+              ;;
+            *)
+              FILES+=("$1")
+              shift
+              ;;
+          esac
+        done
+
+        # Validate arguments
+        if [[ "$ALL" == "false" && ''${#FILES[@]} -eq 0 ]]; then
+          echo -e "''${RED}Error: No files specified. Use -a for all files or specify files.''${NC}" >&2
           usage
           exit 1
-          ;;
-        *)
-          FILES+=("$1")
-          shift
-          ;;
-      esac
-    done
+        fi
 
-    # Validate arguments
-    if [[ "$ALL" == "false" && ''${#FILES[@]} -eq 0 ]]; then
-      echo -e "''${RED}Error: No files specified. Use -a for all files or specify files.''${NC}" >&2
-      usage
-      exit 1
-    fi
+        # Find all files if --all
+        if [[ "$ALL" == "true" ]]; then
+          while IFS= read -r -d "" file; do
+            FILES+=("$file")
+          done < <(fd -e drawio.svg -0)
+        fi
 
-    # Find all files if --all
-    if [[ "$ALL" == "true" ]]; then
-      while IFS= read -r -d "" file; do
-        FILES+=("$file")
-      done < <(fd -e drawio.svg -0)
-    fi
+        # Handle no files found
+        if [[ ''${#FILES[@]} -eq 0 ]]; then
+          echo -e "''${YELLOW}No .drawio.svg files found.''${NC}"
+          exit 0
+        fi
 
-    # Handle no files found
-    if [[ ''${#FILES[@]} -eq 0 ]]; then
-      echo -e "''${YELLOW}No .drawio.svg files found.''${NC}"
-      exit 0
-    fi
+        # Render files
+        success=0
+        failed=0
+        for file in "''${FILES[@]}"; do
+          if render_file "$file" "$DRY_RUN"; then
+            ((success++)) || true
+          else
+            ((failed++)) || true
+          fi
+        done
 
-    # Render files
-    success=0
-    failed=0
-    for file in "''${FILES[@]}"; do
-      if render_file "$file" "$DRY_RUN"; then
-        ((success++)) || true
-      else
-        ((failed++)) || true
-      fi
-    done
-
-    # Summary
-    if [[ "$DRY_RUN" == "true" ]]; then
-      echo -e "\n''${YELLOW}Dry run complete.''${NC} Would render $success file(s)."
-    else
-      echo -e "\nRendered: ''${GREEN}$success''${NC} file(s)"
-      if [[ $failed -gt 0 ]]; then
-        echo -e "Failed:   ''${RED}$failed''${NC} file(s)"
-        exit 1
-      fi
-    fi
+        # Summary
+        if [[ "$DRY_RUN" == "true" ]]; then
+          echo -e "\n''${YELLOW}Dry run complete.''${NC} Would render $success file(s)."
+        else
+          echo -e "\nRendered: ''${GREEN}$success''${NC} file(s)"
+          if [[ $failed -gt 0 ]]; then
+            echo -e "Failed:   ''${RED}$failed''${NC} file(s)"
+            exit 1
+          fi
+        fi
   '';
 
   meta = with lib; {
