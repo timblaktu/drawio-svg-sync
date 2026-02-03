@@ -187,13 +187,13 @@ If you need to create new `.drawio.svg` test files:
    import zlib, base64
    from urllib.parse import quote
 
-   # Encode
+   # Encode: URL encode -> raw deflate -> base64
    url_encoded = quote(xml_content, safe='')
-   deflated = zlib.compress(url_encoded.encode('utf-8'), level=9)[2:-4]
+   deflated = zlib.compress(url_encoded.encode('utf-8'), level=9)[2:-4]  # strip zlib header/trailer
    compressed = base64.b64encode(deflated).decode('ascii')
    ```
 
-See `scripts/regenerate-fixtures.py` for a complete example.
+   Refer to existing `tests/fixtures/*.drawio.svg` files for complete examples of the expected format.
 
 ## License
 
